@@ -1,14 +1,11 @@
-using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Net.Http.Headers;
 
 namespace VendingMachineCSharp
 {
-    enum State
+    internal enum State
     {
         InsertCoin,
-        HasCoins, // TODO Rename to HAS_CUSTOMER_COINS
+        HasCustomerCoins,
         ThankYou,
         Price,
         SoldOut,
@@ -34,62 +31,53 @@ namespace VendingMachineCSharp
 
     public class VendingMachine
     {
-        private Dictionary<Product, int> inventory; // A list of Products and the number of each one that we have in inventory
-        private State state; // I am a state machine! This is what state I am in.
-        private int displayPrice; // When we're in state State.PRICE, this is the price to display.
-        private HashSet<Coin> coinReturnSlot; // The coins that the machine has ejected into the coin return slot
-        private int balance; // How much money the customers have inserted, in cents
-        private Dictionary<Product, int> priceList; // The products that this machine sells. Maps Product to its price in cents.
-        private Dictionary<Coin, int> customersCoins; // The number of each kind of coin that the customer has inserted for a new purchase
-        private Dictionary<Coin, int> coinVault; // The coins I've collected from customer purchases
+        private readonly Dictionary<Product, int> _inventory; // A list of Products and the number of each one that we have in inventory
+        private State _state; // I am a state machine! This is what state I am in.
+        private int _displayPrice; // When we're in state State.PRICE, this is the price to display.
+        private HashSet<Coin> _coinReturnSlot; // The coins that the machine has ejected into the coin return slot
+        private int _balance; // How much money the customers have inserted, in cents
+        private readonly Dictionary<Product, int> _priceList; // The products that this machine sells. Maps Product to its price in cents.
+        private Dictionary<Coin, int> _customersCoins; // The number of each kind of coin that the customer has inserted for a new purchase
+        private readonly Dictionary<Coin, int> _coinVault; // The coins I've collected from customer purchases
 
         public VendingMachine()
         {
             // A default inventory
-            inventory = new Dictionary<Product, int>();
-            inventory.Add(Product.Candy, 42);
-            inventory.Add(Product.Cola, 42);
-            inventory.Add(Product.Chips, 42);
+            _inventory = new Dictionary<Product, int> {{Product.Candy, 42}, {Product.Cola, 42}, {Product.Chips, 42}};
 
-            state = State.InsertCoin;
-            displayPrice = 0;
-            balance = 0;
-            coinReturnSlot = new HashSet<Coin>();
+            _state = State.InsertCoin;
+            _displayPrice = 0;
+            _balance = 0;
+            _coinReturnSlot = new HashSet<Coin>();
 
-            priceList = new Dictionary<Product, int>();
-            priceList.Add(Product.Cola, 100);
-            priceList.Add(Product.Chips, 50);
-            priceList.Add(Product.Candy, 65);
+            _priceList = new Dictionary<Product, int> {{Product.Cola, 100}, {Product.Chips, 50}, {Product.Candy, 65}};
 
-            customersCoins = InitializeWithNoCoins();
-            coinVault = InitializeWithNoCoins();
+            _customersCoins = InitializeWithNoCoins();
+            _coinVault = InitializeWithNoCoins();
         }
 
         public VendingMachine(Dictionary<Product, int> inventory)
         {
-            this.inventory = inventory;
+            this._inventory = inventory;
 
-            state = State.InsertCoin;
-            displayPrice = 0;
-            balance = 0;
-            coinReturnSlot = new HashSet<Coin>();
+            _state = State.InsertCoin;
+            _displayPrice = 0;
+            _balance = 0;
+            _coinReturnSlot = new HashSet<Coin>();
 
-            priceList = new Dictionary<Product, int>();
-            priceList.Add(Product.Cola, 100);
-            priceList.Add(Product.Chips, 50);
-            priceList.Add(Product.Candy, 65);
+            _priceList = new Dictionary<Product, int> {{Product.Cola, 100}, {Product.Chips, 50}, {Product.Candy, 65}};
 
-            customersCoins = InitializeWithNoCoins();
-            coinVault = InitializeWithNoCoins();
+            _customersCoins = InitializeWithNoCoins();
+            _coinVault = InitializeWithNoCoins();
         }
 
 
         private Dictionary<Coin, int> InitializeWithNoCoins()
         {
-            Dictionary<Coin, int> coins = new Dictionary<Coin, int>();
-            coins.Add(Coin.Quarter, 0);
-            coins.Add(Coin.Dime, 0);
-            coins.Add(Coin.Nickel, 0);
+            Dictionary<Coin, int> coins = new Dictionary<Coin, int>
+            {
+                {Coin.Quarter, 0}, {Coin.Dime, 0}, {Coin.Nickel, 0}
+            };
 
             return coins;
         }
@@ -97,33 +85,33 @@ namespace VendingMachineCSharp
 
         public string ViewDisplayMessage()
             {
-                if (state == State.InsertCoin)
+                if (_state == State.InsertCoin)
                 {
                     return "INSERT COIN";
                 }
-                else if (state == State.HasCoins)
+                else if (_state == State.HasCustomerCoins)
                 {
-                    return DisplayAmount(balance);
+                    return DisplayAmount(_balance);
                 }
-                else if (state == State.Price)
+                else if (_state == State.Price)
                 {
-                    state = State.InsertCoin;
-                    return "PRICE " + DisplayAmount(displayPrice);
+                    _state = State.InsertCoin;
+                    return "PRICE " + DisplayAmount(_displayPrice);
                 }
-                else if (state == State.ThankYou)
+                else if (_state == State.ThankYou)
                 {
-                    state = State.InsertCoin;
+                    _state = State.InsertCoin;
                     return "THANK YOU";
                 }
-                else if (state == State.SoldOut)
+                else if (_state == State.SoldOut)
                 {
-                    if (balance == 0)
+                    if (0 == _balance)
                     {
-                        state = State.InsertCoin;
+                        _state = State.InsertCoin;
                     }
                     else
                     {
-                        state = State.HasCoins;
+                        _state = State.HasCustomerCoins;
                     }
 
                     return "SOLD OUT";
@@ -137,51 +125,51 @@ namespace VendingMachineCSharp
         private string DisplayAmount(int amount)
         {
             //Console.WriteLine("DisplayAmount(" + amount + ")");
-            return String.Format("{0:C}", amount / 100.0);
+            return $"{amount / 100.0:C}";
         }
 
         public bool DepositCoin(Coin coin)
         {
             if (coin == Coin.Penny)
             {
-                coinReturnSlot.Add(coin);
+                _coinReturnSlot.Add(coin);
                 return false;
             }
 
-            customersCoins[coin] += 1;
+            _customersCoins[coin] += 1;
 
             if (coin == Coin.Nickel)
             {
-                balance += 5;
+                _balance += 5;
             }
             else if (coin == Coin.Dime)
             {
-                balance += 10;
+                _balance += 10;
             }
             else
             {
-                balance += 25;
+                _balance += 25;
             }
 
-            coinReturnSlot =  new HashSet<Coin>();
-            state = State.HasCoins;
+            _coinReturnSlot =  new HashSet<Coin>();
+            _state = State.HasCustomerCoins;
             return true;
         }
 
 
         public HashSet<Coin> CheckCoinReturnSlot()
         {
-            return coinReturnSlot;
+            return _coinReturnSlot;
         }
 
         public Product SelectProduct(Product product)
         {
-            int price = priceList[product];
+            int price = _priceList[product];
             if (IsInInventory(product))
             {
-                if (balance >= price)
+                if (_balance >= price)
                 {
-                    int changeToMake = balance - price;
+                    int changeToMake = _balance - price;
                     HashSet<Coin> change = MakeChange(changeToMake);
                     // change = self.__make_change_from_customers_coins(change_to_make) # Try to make change from the customer's coins
                     // if not change:
@@ -196,34 +184,34 @@ namespace VendingMachineCSharp
                         }
 
                         // else when we made change, it got taken care of
-                        state = State.ThankYou;
-                        balance = 0; // because I'm delivering both the product and the change
-                        coinReturnSlot = change;
+                        _state = State.ThankYou;
+                        _balance = 0; // because I'm delivering both the product and the change
+                        _coinReturnSlot = change;
                         return product;
                     }
                     else // can't make change
                     {
-                        state = State.ExactChangeOnly;
+                        _state = State.ExactChangeOnly;
                         return Product.None;
                     }
                 }
                 else // customer didn't insert enough money
                 {
-                    state = State.Price;
-                    displayPrice = price;
+                    _state = State.Price;
+                    _displayPrice = price;
                     return Product.None;
                 }
             }
             else // selected product is not in inventory
             {
-                state = State.SoldOut;
+                _state = State.SoldOut;
                 return Product.None;
             }
         }
 
         private bool IsInInventory(Product product)
         {
-            int quantity = inventory[product];
+            int quantity = _inventory[product];
             return quantity > 0;
         }
 
@@ -348,54 +336,54 @@ namespace VendingMachineCSharp
 
         private void RemoveCustomerCoinFromCache(Coin coin)
         {
-            customersCoins[coin] -= 1;
+            _customersCoins[coin] -= 1;
         }
 
         private void RemoveCoinFromVault(Coin coin)
         {
-            coinVault[coin] -= 1;
+            _coinVault[coin] -= 1;
         }
 
         private bool IsCustomerCoinStillAvailable(Coin coin)
         {
-            return customersCoins[coin] > 0;
+            return _customersCoins[coin] > 0;
         }
 
         private bool IsCoinInVault(Coin coin)
         {
-            return coinVault[coin] > 0;
+            return _coinVault[coin] > 0;
         }
 
         private void RemoveFromInventory(Product product)
         {
-            inventory[product]--;
+            _inventory[product]--;
         }
 
         private void MoveAllOfCustomersCoinsToVault()
         {
-            coinVault[Coin.Quarter] += customersCoins[Coin.Quarter];
-            coinVault[Coin.Dime] += customersCoins[Coin.Dime];
-            coinVault[Coin.Nickel] += customersCoins[Coin.Nickel];
-            customersCoins = InitializeWithNoCoins();
+            _coinVault[Coin.Quarter] += _customersCoins[Coin.Quarter];
+            _coinVault[Coin.Dime] += _customersCoins[Coin.Dime];
+            _coinVault[Coin.Nickel] += _customersCoins[Coin.Nickel];
+            _customersCoins = InitializeWithNoCoins();
         }
 
         public void PressCoinReturnButton()
         {
-            balance = 0;
-            state = State.InsertCoin;
+            _balance = 0;
+            _state = State.InsertCoin;
 
-            coinReturnSlot = new HashSet<Coin>();
-            for (int i = 0; i < customersCoins[Coin.Quarter]; i++)
+            _coinReturnSlot = new HashSet<Coin>();
+            for (int i = 0; i < _customersCoins[Coin.Quarter]; i++)
             {
-                coinReturnSlot.Add(Coin.Quarter);
+                _coinReturnSlot.Add(Coin.Quarter);
             }
-            for (int i = 0; i < customersCoins[Coin.Dime]; i++)
+            for (int i = 0; i < _customersCoins[Coin.Dime]; i++)
             {
-                coinReturnSlot.Add(Coin.Dime);
+                _coinReturnSlot.Add(Coin.Dime);
             }
-            for (int i = 0; i < customersCoins[Coin.Nickel]; i++)
+            for (int i = 0; i < _customersCoins[Coin.Nickel]; i++)
             {
-                coinReturnSlot.Add(Coin.Nickel);
+                _coinReturnSlot.Add(Coin.Nickel);
             }
         }
     }
