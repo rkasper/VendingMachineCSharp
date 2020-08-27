@@ -36,36 +36,33 @@ namespace VendingMachineCSharp
         private int _displayPrice; // When we're in state State.PRICE, this is the price to display.
         private HashSet<Coin> _coinReturnSlot; // The coins that the machine has ejected into the coin return slot
         private int _balance; // How much money the customers have inserted, in cents
-        private readonly Dictionary<Product, int> _priceList; // The products that this machine sells. Maps Product to its price in cents.
+        private Dictionary<Product, int> _priceList; // The products that this machine sells. Maps Product to its price in cents.
         private Dictionary<Coin, int> _customersCoins; // The number of each kind of coin that the customer has inserted for a new purchase
-        private readonly Dictionary<Coin, int> _coinVault; // The coins I've collected from customer purchases
+        private Dictionary<Coin, int> _coinVault; // The coins I've collected from customer purchases
 
         public VendingMachine()
         {
             // A default inventory
             _inventory = new Dictionary<Product, int> {{Product.Candy, 42}, {Product.Cola, 42}, {Product.Chips, 42}};
 
-            _state = State.InsertCoin;
-            _displayPrice = 0;
-            _balance = 0;
-            _coinReturnSlot = new HashSet<Coin>();
-
-            _priceList = new Dictionary<Product, int> {{Product.Cola, 100}, {Product.Chips, 50}, {Product.Candy, 65}};
-
-            _customersCoins = InitializeWithNoCoins();
-            _coinVault = InitializeWithNoCoins();
+            InitializeVendingMachine();
         }
 
         public VendingMachine(Dictionary<Product, int> inventory)
         {
             _inventory = inventory;
 
+            InitializeVendingMachine();
+        }
+
+        private void InitializeVendingMachine()
+        {
             _state = State.InsertCoin;
             _displayPrice = 0;
             _balance = 0;
             _coinReturnSlot = new HashSet<Coin>();
 
-            _priceList = new Dictionary<Product, int> {{Product.Cola, 100}, {Product.Chips, 50}, {Product.Candy, 65}};
+            _priceList = new Dictionary<Product, int> { { Product.Cola, 100 }, { Product.Chips, 50 }, { Product.Candy, 65 } };
 
             _customersCoins = InitializeWithNoCoins();
             _coinVault = InitializeWithNoCoins();
