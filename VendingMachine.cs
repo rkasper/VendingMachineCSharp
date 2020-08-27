@@ -58,7 +58,7 @@ namespace VendingMachineCSharp
 
         public VendingMachine(Dictionary<Product, int> inventory)
         {
-            this._inventory = inventory;
+            _inventory = inventory;
 
             _state = State.InsertCoin;
             _displayPrice = 0;
