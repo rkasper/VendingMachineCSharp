@@ -2,15 +2,11 @@ using System.ComponentModel;
 
 namespace VendingMachineCSharp
 {
-    public partial class VendingMachine
+    public abstract class VendingMachineState
     {
-
-        public abstract class VendingMachineState
+        protected internal virtual string ViewDisplayMessage(VendingMachine vendingMachine)
         {
-            protected internal virtual string ViewDisplayMessage(VendingMachine vendingMachine)
-            {
-                return "";
-            }
+            return "";
         }
     }
 }

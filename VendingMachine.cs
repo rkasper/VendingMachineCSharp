@@ -29,14 +29,14 @@ namespace VendingMachineCSharp
     }
 
 
-    public partial class VendingMachine
+    public class VendingMachine
     {
         private Dictionary<Product, int> _inventory; // A list of Products and the number of each one that we have in inventory
         private State _state; // I am a state machine! This is what state I am in.
-        private VendingMachineState _vmState; // Refactoring toward State pattern. TODO fix this comment.
-        private int _displayPrice; // When we're in state State.PRICE, this is the price to display.
+        internal VendingMachineState VMState { get; set; }
+        internal int DisplayPrice { get; private set; }
         private HashSet<Coin> _coinReturnSlot; // The coins that the machine has ejected into the coin return slot
-        private int _balance; // How much money the customers have inserted, in cents
+        internal int Balance { get; private set; }
         private Dictionary<Product, int> _priceList; // The products that this machine sells. Maps Product to its price in cents.
         private Dictionary<Coin, int> _customersCoins; // The number of each kind of coin that the customer has inserted for a new purchase
         private Dictionary<Coin, int> _coinVault; // The coins I've collected from customer purchases
@@ -59,9 +59,9 @@ namespace VendingMachineCSharp
         public void Initialize()
         {
             _state = State.InsertCoin;
-            _vmState = InsertCoinState.Instance();
-            _displayPrice = 0;
-            _balance = 0;
+            VMState = InsertCoinState.Instance();
+            DisplayPrice = 0;
+            Balance = 0;
             _coinReturnSlot = new HashSet<Coin>();
 
             _priceList = new Dictionary<Product, int> { { Product.Cola, 100 }, { Product.Chips, 50 }, { Product.Candy, 65 } };
@@ -85,13 +85,13 @@ namespace VendingMachineCSharp
         {
             if (_state == State.InsertCoin || _state == State.HasCustomerCoins)
             {
-                return _vmState.ViewDisplayMessage(this);
+                return VMState.ViewDisplayMessage(this);
             }
             else if (_state == State.Price)
             {
                 _state = State.InsertCoin;
                 // PriceState.ViewDisplayMessage() transitions _vmState to InsertCoinState for us.
-                return _vmState.ViewDisplayMessage(this);
+                return VMState.ViewDisplayMessage(this);
             }
             else if (_state == State.ThankYou)
             {
@@ -99,19 +99,19 @@ namespace VendingMachineCSharp
                 //_vmState = InsertCoinState.Instance();
                 //return "THANK YOU";
                 // ThankYouState.ViewDisplayMessage() transitions _vmState to InsertCoinState for us.
-                return _vmState.ViewDisplayMessage(this);
+                return VMState.ViewDisplayMessage(this);
             }
             else if (_state == State.SoldOut)
             {
-                if (0 == _balance)
+                if (0 == Balance)
                 {
                     _state = State.InsertCoin;
-                    _vmState = InsertCoinState.Instance();
+                    VMState = InsertCoinState.Instance();
                 }
                 else
                 {
                     _state = State.HasCustomerCoins;
-                    _vmState = HasCustomerCoinsState.Instance();
+                    VMState = HasCustomerCoinsState.Instance();
                 }
 
                 return "SOLD OUT";
@@ -122,7 +122,7 @@ namespace VendingMachineCSharp
             }
         }
 
-        private string DisplayAmount(int amount)
+        internal string DisplayAmount(int amount)
         {
             //Console.WriteLine("DisplayAmount(" + amount + ")");
             return $"{amount / 100.0:C}";
@@ -140,20 +140,20 @@ namespace VendingMachineCSharp
 
             if (coin == Coin.Nickel)
             {
-                _balance += 5;
+                Balance += 5;
             }
             else if (coin == Coin.Dime)
             {
-                _balance += 10;
+                Balance += 10;
             }
             else
             {
-                _balance += 25;
+                Balance += 25;
             }
 
             _coinReturnSlot =  new HashSet<Coin>();
             _state = State.HasCustomerCoins;
-            _vmState = HasCustomerCoinsState.Instance();
+            VMState = HasCustomerCoinsState.Instance();
             return true;
         }
 
@@ -167,9 +167,9 @@ namespace VendingMachineCSharp
             int price = _priceList[product];
             if (IsInInventory(product))
             {
-                if (_balance >= price)
+                if (Balance >= price)
                 {
-                    int changeToMake = _balance - price;
+                    int changeToMake = Balance - price;
                     HashSet<Coin> change = MakeChange(changeToMake);
 
                     if (changeToMake == 0 || change.Count > 0) // customer can make the purchase
@@ -182,8 +182,8 @@ namespace VendingMachineCSharp
 
                         // else when we made change, it got taken care of
                         _state = State.ThankYou;
-                        _vmState = ThankYouState.Instance();
-                        _balance = 0; // because I'm delivering both the product and the change
+                        VMState = ThankYouState.Instance();
+                        Balance = 0; // because I'm delivering both the product and the change
                         _coinReturnSlot = change;
                         return product;
                     }
@@ -196,8 +196,8 @@ namespace VendingMachineCSharp
                 else // customer didn't insert enough money
                 {
                     _state = State.Price;
-                    _vmState = PriceState.Instance();
-                    _displayPrice = price;
+                    VMState = PriceState.Instance();
+                    DisplayPrice = price;
                     return Product.None;
                 }
             }
@@ -368,9 +368,9 @@ namespace VendingMachineCSharp
 
         public void PressCoinReturnButton()
         {
-            _balance = 0;
+            Balance = 0;
             _state = State.InsertCoin;
-            _vmState = InsertCoinState.Instance();
+            VMState = InsertCoinState.Instance();
 
             _coinReturnSlot = new HashSet<Coin>();
             for (int i = 0; i < _customersCoins[Coin.Quarter]; i++)
