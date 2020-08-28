@@ -2,21 +2,19 @@ namespace VendingMachineCSharp
 {
     public partial class VendingMachine
     {
-
-        public class InsertCoinState : VendingMachineState
+        public class HasCustomerCoinsState : VendingMachineState
         {
             private static VendingMachineState _instance = null;
 
-            private InsertCoinState()
+            private HasCustomerCoinsState()
             {
             }
 
             protected internal static VendingMachineState Instance()
             {
-                // TODO Make it thread-safe?
                 if (null == _instance)
                 {
-                    _instance = new InsertCoinState();
+                    _instance = new HasCustomerCoinsState();
                 }
 
                 return _instance;
@@ -24,7 +22,7 @@ namespace VendingMachineCSharp
 
             protected internal override string ViewDisplayMessage()
             {
-                return "INSERT COIN";
+                return VendingMachine.Instance().DisplayAmount(VendingMachine.Instance()._balance);
             }
         }
     }

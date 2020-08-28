@@ -29,7 +29,7 @@ namespace VendingMachineCSharp
     }
 
 
-    public class VendingMachine
+    public partial class VendingMachine
     {
         private static VendingMachine _vmInstance = null;
         private Dictionary<Product, int> _inventory; // A list of Products and the number of each one that we have in inventory
@@ -391,30 +391,6 @@ namespace VendingMachineCSharp
             for (int i = 0; i < _customersCoins[Coin.Nickel]; i++)
             {
                 _coinReturnSlot.Add(Coin.Nickel);
-            }
-        }
-
-        public class HasCustomerCoinsState : VendingMachineState
-        {
-            private static VendingMachineState _instance = null;
-
-            private HasCustomerCoinsState()
-            {
-            }
-
-            public static VendingMachineState Instance()
-            {
-                if (null == _instance)
-                {
-                    _instance = new HasCustomerCoinsState();
-                }
-
-                return _instance;
-            }
-
-            public string ViewDisplayMessage()
-            {
-                return VendingMachine.Instance().DisplayAmount(VendingMachine.Instance()._balance);
             }
         }
     }

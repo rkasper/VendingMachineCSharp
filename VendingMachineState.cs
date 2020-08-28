@@ -1,7 +1,16 @@
+using System.ComponentModel;
+
 namespace VendingMachineCSharp
 {
-    public interface VendingMachineState
+    public partial class VendingMachine
     {
-        string ViewDisplayMessage();
+
+        public abstract class VendingMachineState
+        {
+            protected internal virtual string ViewDisplayMessage()
+            {
+                return "";
+            }
+        }
     }
 }
