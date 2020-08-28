@@ -96,8 +96,6 @@ namespace VendingMachineCSharp
             else if (_state == State.ThankYou)
             {
                 _state = State.InsertCoin;
-                //_vmState = InsertCoinState.Instance();
-                //return "THANK YOU";
                 // ThankYouState.ViewDisplayMessage() transitions _vmState to InsertCoinState for us.
                 return VMState.ViewDisplayMessage(this);
             }
@@ -106,15 +104,14 @@ namespace VendingMachineCSharp
                 if (0 == Balance)
                 {
                     _state = State.InsertCoin;
-                    VMState = InsertCoinState.Instance();
                 }
                 else
                 {
                     _state = State.HasCustomerCoins;
-                    VMState = HasCustomerCoinsState.Instance();
                 }
 
-                return "SOLD OUT";
+                // SoldOutState.ViewDisplayMessage() transitions _vmState to InsertCoinState for us.
+                return VMState.ViewDisplayMessage(this);
             }
             else // state is EXACT_CHANGE_ONLY
             {
@@ -204,6 +201,7 @@ namespace VendingMachineCSharp
             else // selected product is not in inventory
             {
                 _state = State.SoldOut;
+                VMState = SoldOutState.Instance();
                 return Product.None;
             }
         }
