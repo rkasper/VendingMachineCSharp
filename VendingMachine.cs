@@ -72,7 +72,7 @@ namespace VendingMachineCSharp
 
         private Dictionary<Coin, int> InitializeWithNoCoins()
         {
-            Dictionary<Coin, int> coins = new Dictionary<Coin, int>
+            var coins = new Dictionary<Coin, int>
             {
                 {Coin.Quarter, 0}, {Coin.Dime, 0}, {Coin.Nickel, 0}
             };
@@ -82,43 +82,43 @@ namespace VendingMachineCSharp
 
 
         public string ViewDisplayMessage()
+        {
+            if (_state == State.InsertCoin || _state == State.HasCustomerCoins)
             {
-                if (_state == State.InsertCoin || _state == State.HasCustomerCoins)
-                {
-                    return _vmState.ViewDisplayMessage(this);
-                }
-                else if (_state == State.Price)
-                {
-                    _state = State.InsertCoin;
-                    _vmState = InsertCoinState.Instance();
-                    return "PRICE " + DisplayAmount(_displayPrice);
-                }
-                else if (_state == State.ThankYou)
-                {
-                    _state = State.InsertCoin;
-                    _vmState = InsertCoinState.Instance();
-                    return "THANK YOU";
-                }
-                else if (_state == State.SoldOut)
-                {
-                    if (0 == _balance)
-                    {
-                        _state = State.InsertCoin;
-                        _vmState = InsertCoinState.Instance();
-                    }
-                    else
-                    {
-                        _state = State.HasCustomerCoins;
-                        _vmState = HasCustomerCoinsState.Instance();
-                    }
-
-                    return "SOLD OUT";
-                }
-                else // state is EXACT_CHANGE_ONLY
-                {
-                    return "EXACT CHANGE ONLY";
-                }
+                return _vmState.ViewDisplayMessage(this);
             }
+            else if (_state == State.Price)
+            {
+                _state = State.InsertCoin;
+                // PriceState.ViewDisplayMessage() transitions _vmState to InsertCoinState for us.
+                return _vmState.ViewDisplayMessage(this);
+            }
+            else if (_state == State.ThankYou)
+            {
+                _state = State.InsertCoin;
+                _vmState = InsertCoinState.Instance();
+                return "THANK YOU";
+            }
+            else if (_state == State.SoldOut)
+            {
+                if (0 == _balance)
+                {
+                    _state = State.InsertCoin;
+                    _vmState = InsertCoinState.Instance();
+                }
+                else
+                {
+                    _state = State.HasCustomerCoins;
+                    _vmState = HasCustomerCoinsState.Instance();
+                }
+
+                return "SOLD OUT";
+            }
+            else // state is EXACT_CHANGE_ONLY
+            {
+                return "EXACT CHANGE ONLY";
+            }
+        }
 
         private string DisplayAmount(int amount)
         {
@@ -193,6 +193,7 @@ namespace VendingMachineCSharp
                 else // customer didn't insert enough money
                 {
                     _state = State.Price;
+                    _vmState = PriceState.Instance();
                     _displayPrice = price;
                     return Product.None;
                 }
