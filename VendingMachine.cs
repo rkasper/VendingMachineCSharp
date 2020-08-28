@@ -31,8 +31,10 @@ namespace VendingMachineCSharp
 
     public class VendingMachine
     {
-        private readonly Dictionary<Product, int> _inventory; // A list of Products and the number of each one that we have in inventory
+        private static VendingMachine _vmInstance = null;
+        private Dictionary<Product, int> _inventory; // A list of Products and the number of each one that we have in inventory
         private State _state; // I am a state machine! This is what state I am in.
+        private VendingMachineState _vmState; // Refactoring toward State pattern. TODO fix this comment.
         private int _displayPrice; // When we're in state State.PRICE, this is the price to display.
         private HashSet<Coin> _coinReturnSlot; // The coins that the machine has ejected into the coin return slot
         private int _balance; // How much money the customers have inserted, in cents
@@ -40,24 +42,28 @@ namespace VendingMachineCSharp
         private Dictionary<Coin, int> _customersCoins; // The number of each kind of coin that the customer has inserted for a new purchase
         private Dictionary<Coin, int> _coinVault; // The coins I've collected from customer purchases
 
-        public VendingMachine()
+        public static VendingMachine Instance()
+        {
+            if (null == _vmInstance)
+            {
+                _vmInstance = new VendingMachine();
+            }
+
+            return _vmInstance;
+        }
+
+        private VendingMachine()
         {
             // A default inventory
             _inventory = new Dictionary<Product, int> {{Product.Candy, 42}, {Product.Cola, 42}, {Product.Chips, 42}};
 
-            InitializeVendingMachine();
+            Reset();
         }
 
-        public VendingMachine(Dictionary<Product, int> inventory)
-        {
-            _inventory = inventory;
-
-            InitializeVendingMachine();
-        }
-
-        private void InitializeVendingMachine()
+        public void Reset()
         {
             _state = State.InsertCoin;
+            _vmState = InsertCoinState.Instance();
             _displayPrice = 0;
             _balance = 0;
             _coinReturnSlot = new HashSet<Coin>();
@@ -66,6 +72,12 @@ namespace VendingMachineCSharp
 
             _customersCoins = InitializeWithNoCoins();
             _coinVault = InitializeWithNoCoins();
+        }
+
+        public void Reset(Dictionary<Product, int> inventory)
+        {
+            Reset();
+            _inventory = inventory;
         }
 
 
@@ -82,22 +94,20 @@ namespace VendingMachineCSharp
 
         public string ViewDisplayMessage()
             {
-                if (_state == State.InsertCoin)
+                if (_state == State.InsertCoin || _state == State.HasCustomerCoins)
                 {
-                    return "INSERT COIN";
-                }
-                else if (_state == State.HasCustomerCoins)
-                {
-                    return DisplayAmount(_balance);
+                    return _vmState.ViewDisplayMessage();
                 }
                 else if (_state == State.Price)
                 {
                     _state = State.InsertCoin;
+                    _vmState = InsertCoinState.Instance();
                     return "PRICE " + DisplayAmount(_displayPrice);
                 }
                 else if (_state == State.ThankYou)
                 {
                     _state = State.InsertCoin;
+                    _vmState = InsertCoinState.Instance();
                     return "THANK YOU";
                 }
                 else if (_state == State.SoldOut)
@@ -105,10 +115,12 @@ namespace VendingMachineCSharp
                     if (0 == _balance)
                     {
                         _state = State.InsertCoin;
+                        _vmState = InsertCoinState.Instance();
                     }
                     else
                     {
                         _state = State.HasCustomerCoins;
+                        _vmState = HasCustomerCoinsState.Instance();
                     }
 
                     return "SOLD OUT";
@@ -150,9 +162,9 @@ namespace VendingMachineCSharp
 
             _coinReturnSlot =  new HashSet<Coin>();
             _state = State.HasCustomerCoins;
+            _vmState = HasCustomerCoinsState.Instance();
             return true;
         }
-
 
         public HashSet<Coin> CheckCoinReturnSlot()
         {
@@ -168,10 +180,7 @@ namespace VendingMachineCSharp
                 {
                     int changeToMake = _balance - price;
                     HashSet<Coin> change = MakeChange(changeToMake);
-                    // change = self.__make_change_from_customers_coins(change_to_make) # Try to make change from the customer's coins
-                    // if not change:
-                    //      Try to make change from the machine's coin vault
-                    //      change = self.__make_change_from_coin_vault(change_to_make)
+
                     if (changeToMake == 0 || change.Count > 0) // customer can make the purchase
                     {
                         RemoveFromInventory(product);
@@ -368,6 +377,7 @@ namespace VendingMachineCSharp
         {
             _balance = 0;
             _state = State.InsertCoin;
+            _vmState = InsertCoinState.Instance();
 
             _coinReturnSlot = new HashSet<Coin>();
             for (int i = 0; i < _customersCoins[Coin.Quarter]; i++)
@@ -381,6 +391,30 @@ namespace VendingMachineCSharp
             for (int i = 0; i < _customersCoins[Coin.Nickel]; i++)
             {
                 _coinReturnSlot.Add(Coin.Nickel);
+            }
+        }
+
+        public class HasCustomerCoinsState : VendingMachineState
+        {
+            private static VendingMachineState _instance = null;
+
+            private HasCustomerCoinsState()
+            {
+            }
+
+            public static VendingMachineState Instance()
+            {
+                if (null == _instance)
+                {
+                    _instance = new HasCustomerCoinsState();
+                }
+
+                return _instance;
+            }
+
+            public string ViewDisplayMessage()
+            {
+                return VendingMachine.Instance().DisplayAmount(VendingMachine.Instance()._balance);
             }
         }
     }
