@@ -96,8 +96,10 @@ namespace VendingMachineCSharp
             else if (_state == State.ThankYou)
             {
                 _state = State.InsertCoin;
-                _vmState = InsertCoinState.Instance();
-                return "THANK YOU";
+                //_vmState = InsertCoinState.Instance();
+                //return "THANK YOU";
+                // ThankYouState.ViewDisplayMessage() transitions _vmState to InsertCoinState for us.
+                return _vmState.ViewDisplayMessage(this);
             }
             else if (_state == State.SoldOut)
             {
@@ -180,6 +182,7 @@ namespace VendingMachineCSharp
 
                         // else when we made change, it got taken care of
                         _state = State.ThankYou;
+                        _vmState = ThankYouState.Instance();
                         _balance = 0; // because I'm delivering both the product and the change
                         _coinReturnSlot = change;
                         return product;
