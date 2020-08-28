@@ -7,7 +7,7 @@ namespace VendingMachineCSharp
 
         public abstract class VendingMachineState
         {
-            protected internal virtual string ViewDisplayMessage()
+            protected internal virtual string ViewDisplayMessage(VendingMachine vendingMachine)
             {
                 return "";
             }

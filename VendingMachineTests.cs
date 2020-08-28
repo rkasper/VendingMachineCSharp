@@ -31,8 +31,7 @@ namespace VendingMachineCSharp
         [Test]
         public void AcceptCoins()
         {
-            var vm = VendingMachine.Instance();
-            vm.Reset();
+            var vm = new VendingMachine();
 
             // When we turn on the vending machine, it displays "INSERT COIN".
             Assert.AreEqual("INSERT COIN", vm.ViewDisplayMessage());
@@ -77,8 +76,7 @@ namespace VendingMachineCSharp
         [Test]
         public void SelectProduct()
         {
-            var vm = VendingMachine.Instance();
-            vm.Reset();
+            var vm = new VendingMachine();
 
             // When I insert enough money and select cola,
             // then I get my cola
@@ -152,8 +150,7 @@ namespace VendingMachineCSharp
         [Test]
         public void MakeChange()
         {
-            var vm = VendingMachine.Instance();
-            vm.Reset();
+            var vm = new VendingMachine();
 
             // Put a dollar in the machine. Buy a candy. Get 35 cents back.
             vm.DepositCoin(Coin.Quarter);
@@ -212,8 +209,7 @@ namespace VendingMachineCSharp
         [Test]
         public void ReturnCoins()
         {
-            var vm = VendingMachine.Instance();
-            vm.Reset();
+            var vm = new VendingMachine();
 
             // Put coins in the machine. Get your coins back.
             vm.DepositCoin(Coin.Quarter);
@@ -247,8 +243,7 @@ namespace VendingMachineCSharp
         public void SoldOut()
         {
             var inventory = new Dictionary<Product, int> {{Product.Candy, 1}, {Product.Cola, 2}, {Product.Chips, 42}};
-            var vm = VendingMachine.Instance();
-            vm.Reset(inventory);
+            var vm = new VendingMachine(inventory);
             
             // Buy a candy. Buy another candy. Notice that it's out of stock.
             vm.DepositCoin(Coin.Quarter);
@@ -286,8 +281,7 @@ namespace VendingMachineCSharp
         [Test]
         public void ExactChangeOnly()
         {
-            var vm = VendingMachine.Instance();
-            vm.Reset();
+            var vm = new VendingMachine();
 
             // Easiest case: No money in the coin safe yet. Can't make change with the coins I inserted.
             vm.DepositCoin(Coin.Quarter);
@@ -324,8 +318,7 @@ namespace VendingMachineCSharp
         [Test]
         public void ReceiveChangeFromMachinesVault()
         {
-            var vm = VendingMachine.Instance();
-            vm.Reset();
+            var vm = new VendingMachine();
 
             vm.DepositCoin(Coin.Quarter);
             vm.DepositCoin(Coin.Quarter);

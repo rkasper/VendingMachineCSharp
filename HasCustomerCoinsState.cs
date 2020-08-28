@@ -20,9 +20,9 @@ namespace VendingMachineCSharp
                 return _instance;
             }
 
-            protected internal override string ViewDisplayMessage()
+            protected internal override string ViewDisplayMessage(VendingMachine vendingMachine)
             {
-                return VendingMachine.Instance().DisplayAmount(VendingMachine.Instance()._balance);
+                return vendingMachine.DisplayAmount(vendingMachine._balance);
             }
         }
     }

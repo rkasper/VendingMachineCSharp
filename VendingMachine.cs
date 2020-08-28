@@ -31,7 +31,6 @@ namespace VendingMachineCSharp
 
     public partial class VendingMachine
     {
-        private static VendingMachine _vmInstance = null;
         private Dictionary<Product, int> _inventory; // A list of Products and the number of each one that we have in inventory
         private State _state; // I am a state machine! This is what state I am in.
         private VendingMachineState _vmState; // Refactoring toward State pattern. TODO fix this comment.
@@ -42,25 +41,22 @@ namespace VendingMachineCSharp
         private Dictionary<Coin, int> _customersCoins; // The number of each kind of coin that the customer has inserted for a new purchase
         private Dictionary<Coin, int> _coinVault; // The coins I've collected from customer purchases
 
-        public static VendingMachine Instance()
-        {
-            if (null == _vmInstance)
-            {
-                _vmInstance = new VendingMachine();
-            }
-
-            return _vmInstance;
-        }
-
-        private VendingMachine()
+        public VendingMachine()
         {
             // A default inventory
-            _inventory = new Dictionary<Product, int> {{Product.Candy, 42}, {Product.Cola, 42}, {Product.Chips, 42}};
+            _inventory = new Dictionary<Product, int> { { Product.Candy, 42 }, { Product.Cola, 42 }, { Product.Chips, 42 } };
 
-            Reset();
+            Initialize();
         }
 
-        public void Reset()
+        public VendingMachine(Dictionary<Product, int> inventory)
+        {
+            _inventory = inventory;
+
+            Initialize();
+        }
+
+        public void Initialize()
         {
             _state = State.InsertCoin;
             _vmState = InsertCoinState.Instance();
@@ -73,13 +69,6 @@ namespace VendingMachineCSharp
             _customersCoins = InitializeWithNoCoins();
             _coinVault = InitializeWithNoCoins();
         }
-
-        public void Reset(Dictionary<Product, int> inventory)
-        {
-            Reset();
-            _inventory = inventory;
-        }
-
 
         private Dictionary<Coin, int> InitializeWithNoCoins()
         {
@@ -96,7 +85,7 @@ namespace VendingMachineCSharp
             {
                 if (_state == State.InsertCoin || _state == State.HasCustomerCoins)
                 {
-                    return _vmState.ViewDisplayMessage();
+                    return _vmState.ViewDisplayMessage(this);
                 }
                 else if (_state == State.Price)
                 {
