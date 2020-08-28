@@ -32,7 +32,7 @@ namespace VendingMachineCSharp
     public class VendingMachine
     {
         private Dictionary<Product, int> _inventory; // A list of Products and the number of each one that we have in inventory
-        private State _state; // I am a state machine! This is what state I am in.
+        internal State State { get; set; }
         internal VendingMachineState VMState { get; set; }
         internal int DisplayPrice { get; private set; }
         private HashSet<Coin> _coinReturnSlot; // The coins that the machine has ejected into the coin return slot
@@ -58,7 +58,7 @@ namespace VendingMachineCSharp
 
         public void Initialize()
         {
-            _state = State.InsertCoin;
+            State = State.InsertCoin;
             VMState = InsertCoinState.Instance();
             DisplayPrice = 0;
             Balance = 0;
@@ -83,40 +83,7 @@ namespace VendingMachineCSharp
 
         public string ViewDisplayMessage()
         {
-            if (_state == State.InsertCoin || _state == State.HasCustomerCoins)
-            {
-                return VMState.ViewDisplayMessage(this);
-            }
-            else if (_state == State.Price)
-            {
-                _state = State.InsertCoin;
-                // PriceState.ViewDisplayMessage() transitions _vmState to InsertCoinState for us.
-                return VMState.ViewDisplayMessage(this);
-            }
-            else if (_state == State.ThankYou)
-            {
-                _state = State.InsertCoin;
-                // ThankYouState.ViewDisplayMessage() transitions _vmState to InsertCoinState for us.
-                return VMState.ViewDisplayMessage(this);
-            }
-            else if (_state == State.SoldOut)
-            {
-                if (0 == Balance)
-                {
-                    _state = State.InsertCoin;
-                }
-                else
-                {
-                    _state = State.HasCustomerCoins;
-                }
-
-                // SoldOutState.ViewDisplayMessage() transitions _vmState to InsertCoinState for us.
-                return VMState.ViewDisplayMessage(this);
-            }
-            else // state is EXACT_CHANGE_ONLY
-            {
-                return "EXACT CHANGE ONLY";
-            }
+            return VMState.ViewDisplayMessage(this);
         }
 
         internal string DisplayAmount(int amount)
@@ -149,7 +116,7 @@ namespace VendingMachineCSharp
             }
 
             _coinReturnSlot =  new HashSet<Coin>();
-            _state = State.HasCustomerCoins;
+            State = State.HasCustomerCoins;
             VMState = HasCustomerCoinsState.Instance();
             return true;
         }
@@ -178,7 +145,7 @@ namespace VendingMachineCSharp
                         }
 
                         // else when we made change, it got taken care of
-                        _state = State.ThankYou;
+                        State = State.ThankYou;
                         VMState = ThankYouState.Instance();
                         Balance = 0; // because I'm delivering both the product and the change
                         _coinReturnSlot = change;
@@ -186,13 +153,14 @@ namespace VendingMachineCSharp
                     }
                     else // can't make change
                     {
-                        _state = State.ExactChangeOnly;
+                        State = State.ExactChangeOnly;
+                        VMState = ExactChangeState.Instance();
                         return Product.None;
                     }
                 }
                 else // customer didn't insert enough money
                 {
-                    _state = State.Price;
+                    State = State.Price;
                     VMState = PriceState.Instance();
                     DisplayPrice = price;
                     return Product.None;
@@ -200,7 +168,7 @@ namespace VendingMachineCSharp
             }
             else // selected product is not in inventory
             {
-                _state = State.SoldOut;
+                State = State.SoldOut;
                 VMState = SoldOutState.Instance();
                 return Product.None;
             }
@@ -367,7 +335,7 @@ namespace VendingMachineCSharp
         public void PressCoinReturnButton()
         {
             Balance = 0;
-            _state = State.InsertCoin;
+            State = State.InsertCoin;
             VMState = InsertCoinState.Instance();
 
             _coinReturnSlot = new HashSet<Coin>();
@@ -384,5 +352,31 @@ namespace VendingMachineCSharp
                 _coinReturnSlot.Add(Coin.Nickel);
             }
         }
+    }
+
+    public class ExactChangeState : VendingMachineState
+    {
+        private static VendingMachineState _instance = null;
+
+        private ExactChangeState()
+        {
+        }
+
+        protected internal static VendingMachineState Instance()
+        {
+            // TODO Make it thread-safe?
+            if (null == _instance)
+            {
+                _instance = new ExactChangeState();
+            }
+
+            return _instance;
+        }
+
+        protected internal override string ViewDisplayMessage(VendingMachine vendingMachine)
+        {
+            return "EXACT CHANGE ONLY";
+        }
+
     }
 }

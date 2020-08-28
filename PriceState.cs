@@ -20,6 +20,7 @@ namespace VendingMachineCSharp
 
         protected internal override string ViewDisplayMessage(VendingMachine vendingMachine)
         {
+            vendingMachine.State = State.InsertCoin;
             vendingMachine.VMState = InsertCoinState.Instance();
             return "PRICE " + vendingMachine.DisplayAmount(vendingMachine.DisplayPrice);
         }

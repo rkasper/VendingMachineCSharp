@@ -22,10 +22,12 @@ namespace VendingMachineCSharp
         {
             if (0 == vendingMachine.Balance)
             {
+                vendingMachine.State = State.SoldOut;
                 vendingMachine.VMState = InsertCoinState.Instance();
             }
             else
             {
+                vendingMachine.State = State.HasCustomerCoins;
                 vendingMachine.VMState = HasCustomerCoinsState.Instance();
             }
 
