@@ -17,11 +17,16 @@ namespace VendingMachineCSharp
 
             return _instance;
         }
+        protected internal override void TransitionTo(VendingMachine vendingMachine, State nextState, VendingMachineState nextVMState)
+        {
+            vendingMachine.State = nextState;
+            vendingMachine.VMState = nextVMState;
+        }
+
 
         protected internal override string ViewDisplayMessage(VendingMachine vendingMachine)
         {
-            vendingMachine.State = State.InsertCoin;
-            vendingMachine.VMState = InsertCoinState.Instance();
+            TransitionTo(vendingMachine, State.InsertCoin, InsertCoinState.Instance());
             return "THANK YOU";
         }
     }

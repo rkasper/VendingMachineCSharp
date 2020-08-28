@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace VendingMachineCSharp
 {
-    internal enum State
+    public enum State
     {
         InsertCoin,
         HasCustomerCoins,

@@ -17,18 +17,22 @@ namespace VendingMachineCSharp
 
             return _instance;
         }
+        protected internal override void TransitionTo(VendingMachine vendingMachine, State nextState, VendingMachineState nextVMState)
+        {
+            vendingMachine.State = nextState;
+            vendingMachine.VMState = nextVMState;
+        }
+
 
         protected internal override string ViewDisplayMessage(VendingMachine vendingMachine)
         {
             if (0 == vendingMachine.Balance)
             {
-                vendingMachine.State = State.SoldOut;
-                vendingMachine.VMState = InsertCoinState.Instance();
+                TransitionTo(vendingMachine, State.SoldOut, InsertCoinState.Instance());
             }
             else
             {
-                vendingMachine.State = State.HasCustomerCoins;
-                vendingMachine.VMState = HasCustomerCoinsState.Instance();
+                TransitionTo(vendingMachine, State.HasCustomerCoins, HasCustomerCoinsState.Instance());
             }
 
             return "SOLD OUT";
