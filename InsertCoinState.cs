@@ -2,7 +2,8 @@ namespace VendingMachineCSharp
 {
     public class InsertCoinState : VendingMachineState
     {
-        private static VendingMachineState _instance = null;
+        // TODO To make it thread-safe, create the singleton instance here instead of in the factory method.
+        private static VendingMachineState _instance; /* = new InsertCoinState();*/
 
         private InsertCoinState()
         {
